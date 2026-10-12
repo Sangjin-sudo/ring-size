@@ -1,5 +1,5 @@
 // Offline cache. Bump the version whenever any listed file changes.
-var CACHE = 'ringsizer-v2';
+var CACHE = 'ringsizer-v3';
 var FILES = ['./', 'index.html', 'style.css', 'sizes.js', 'app.js', 'icon.svg', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', function (e) {

@@ -79,9 +79,31 @@ label.inline input { width: 110px; }
   touch-action: none;
 }
 .stage.tall { height: 200px; }
-.bar { height: 56px; background: var(--disc); border-radius: 3px; margin-right: auto; }
-#calibStage { justify-content: flex-start; padding: 16px 0; }
-#calibStage.coin { justify-content: center; }
+/* Card calibration: the bar sits at the top so the card can lie on it, and
+   the grip hangs below the bar's end so it stays reachable under the card. */
+#calibStage { display: block; height: 150px; cursor: ew-resize; }
+#calibStage.coin { display: flex; height: auto; cursor: default; }
+.bar { position: absolute; left: 0; top: 14px; height: 56px; background: var(--disc); border-radius: 0 3px 3px 0; }
+.grip { position: absolute; top: 14px; bottom: 0; width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none; }
+.grip span {
+  position: absolute; left: 50%; bottom: 12px; width: 44px; height: 44px; margin-left: -22px;
+  border-radius: 50%; background: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.grip span::before {
+  content: "↔"; position: absolute; inset: 0; display: grid; place-items: center;
+  color: var(--accent-ink); font-size: 1.4rem; font-weight: 700;
+}
+#calibStage.coin .grip, #calibStage.coin .bar { display: none; }
+
+.fine { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fine button {
+  min-height: 48px; padding: 0 18px; border-radius: 24px; font: inherit; font-weight: 600;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.fine button:active { background: var(--line); }
+.finehint { color: var(--ink-soft); font-size: 0.8rem; }
 .disc { background: var(--disc); border-radius: 50%; flex: none; }
 .cross { position: absolute; inset: 0; pointer-events: none;
   background:
@@ -141,5 +163,4 @@ footer { color: var(--ink-soft); font-size: 0.85rem; text-align: center; padding
     margin-left: -33px; margin-right: -33px;
     border-left: 0; border-right: 0; border-radius: 0;
   }
-  #calibStage:not(.coin) .bar { margin-left: 4px; }
 }

@@ -42,14 +42,16 @@
 
     <div class="stage" id="calibStage">
       <div id="calibBar" class="bar" aria-hidden="true"></div>
+      <div id="calibGrip" class="grip" aria-hidden="true"><span></span></div>
       <div id="calibDisc" class="disc" aria-hidden="true" hidden></div>
     </div>
 
-    <div class="adjust">
-      <button type="button" class="nudge" id="calMinus" aria-label="Smaller">−</button>
-      <input type="range" id="calRange" min="2.5" max="14" step="0.005" aria-label="Adjust size">
-      <button type="button" class="nudge" id="calPlus" aria-label="Larger">+</button>
+    <div class="fine">
+      <button type="button" id="calMinus">− <span id="calMinusLbl">Shorter</span></button>
+      <span class="finehint">fine-tune</span>
+      <button type="button" id="calPlus"><span id="calPlusLbl">Longer</span> +</button>
     </div>
+    <p id="calLimit" class="help" hidden></p>
 
     <button type="button" class="primary" id="calDone">It matches</button>
   </section>
@@ -62,7 +64,7 @@
     </div>
 
     <div id="ringMode" class="card">
-      <p class="help">Lay the ring flat on the circle. Adjust until the dark circle just fills the <strong>inside</strong> of the ring, with no dark edge hidden under the metal.</p>
+      <p class="help">Lay the ring flat on the circle. Drag on the circle or use the slider until the dark circle just fills the <strong>inside</strong> of the ring, with no dark edge hidden under the metal.</p>
       <div class="stage tall" id="ringStage">
         <div id="ringDisc" class="disc" aria-hidden="true"></div>
         <div class="cross" aria-hidden="true"></div>

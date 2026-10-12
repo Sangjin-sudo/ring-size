@@ -60,18 +60,38 @@
     $('calibDisc').hidden = isCard;
     $('calibStage').classList.toggle('coin', !isCard);
     $('calibHelp').innerHTML = isCard
-      ? 'Hold any bank, ID or loyalty card against the screen with its <strong>short edge</strong> along the dark bar. Adjust until the bar is exactly as long as that edge.'
-      : 'Lay the coin on the dark circle. Adjust until the circle just disappears behind the coin.';
+      ? 'Hold any bank, ID or loyalty card with its <strong>short edge</strong> on the bar and one corner at the bar’s left end. Drag the round handle until the line meets the card’s other corner.'
+      : 'Lay the coin on the circle. Drag outward or inward until the circle just disappears behind the coin.';
+    $('calMinusLbl').textContent = isCard ? 'Shorter' : 'Smaller';
+    $('calPlusLbl').textContent = isCard ? 'Longer' : 'Larger';
+
+    // Never let the shape grow past the visible stage.
+    var lim = calibLimitPx();
     var px = refMm() * draftPxPerMm;
+    if (px > lim) { px = lim; draftPxPerMm = px / refMm(); }
+    var atMax = px >= lim - 0.01;
     if (isCard) {
       $('calibBar').style.width = px + 'px';
+      $('calibGrip').style.left = px + 'px';
+      $('calibStage').style.minHeight = '';
     } else {
       $('calibDisc').style.width = px + 'px';
       $('calibDisc').style.height = px + 'px';
-      $('calibStage').style.minHeight = Math.ceil(px + 32) + 'px';
+      $('calibStage').style.minHeight = Math.ceil(lim + 32) + 'px';
     }
-    if (isCard) $('calibStage').style.minHeight = '';
-    $('calRange').value = draftPxPerMm;
+    $('calLimit').hidden = !atMax;
+    if (atMax) {
+      $('calLimit').textContent = isCard
+        ? 'That is as wide as this screen goes. If the card is still longer, turn the phone sideways or switch to Coin.'
+        : 'That is as large as this screen goes. Try a smaller coin or the bank card.';
+    }
+  }
+
+  // Largest size in px the calibration shape may take on this screen.
+  function calibLimitPx() {
+    var w = $('calibStage').clientWidth;
+    if (state.calObject === 'card') return Math.max(60, w - 24);   // keep the grip on screen
+    return Math.max(60, Math.min(w - 32, 260));
   }
 
   function showCalib() {
@@ -214,6 +234,8 @@
   function setRing(mm) { state.ringMm = clamp(Math.round(mm * 20) / 20, S.MIN_MM, S.MAX_MM); renderRing(); renderResult(); save(); }
   function setCirc(mm) { state.circMm = clamp(Math.round(mm * 10) / 10, 38, 78); renderStrip(); renderResult(); save(); }
   function setDraft(v) { draftPxPerMm = clamp(v, 2.5, 14); renderCalib(); }
+  function setDraftPx(px) { setDraft(px / refMm()); }
+  function nudgeDraft(dir) { setDraftPx(refMm() * draftPxPerMm + dir * 0.5); }
 
   function wire() {
     var coinSel = $('coin');
@@ -227,9 +249,22 @@
 
     $('tabCard').addEventListener('click', function () { state.calObject = 'card'; renderCalib(); });
     $('tabCoin').addEventListener('click', function () { state.calObject = 'coin'; renderCalib(); });
-    $('calRange').addEventListener('input', function () { setDraft(+this.value); });
-    holdable($('calMinus'), function () { setDraft(draftPxPerMm - 0.01); });
-    holdable($('calPlus'), function () { setDraft(draftPxPerMm + 0.01); });
+    holdable($('calMinus'), function () { nudgeDraft(-1); });
+    holdable($('calPlus'), function () { nudgeDraft(1); });
+
+    // Drag anywhere on the stage: the bar's end (or the coin's rim) follows the finger.
+    var cstage = $('calibStage');
+    function calDrag(e) {
+      var r = cstage.getBoundingClientRect();
+      if (state.calObject === 'card') {
+        setDraftPx(e.clientX - r.left);
+      } else {
+        var dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+        setDraftPx(2 * Math.sqrt(dx * dx + dy * dy));
+      }
+    }
+    cstage.addEventListener('pointerdown', function (e) { cstage.setPointerCapture(e.pointerId); calDrag(e); });
+    cstage.addEventListener('pointermove', function (e) { if (cstage.hasPointerCapture(e.pointerId)) calDrag(e); });
     $('calDone').addEventListener('click', finishCalib);
     $('recal').addEventListener('click', showCalib);
 
@@ -247,6 +282,16 @@
       if (isFinite(v) && v >= 38 && v <= 78) setCirc(v);
     });
     $('circInput').addEventListener('blur', function () { this.value = fmt(state.circMm, 1); });
+
+    // Dragging on the ring stage resizes the circle: its rim follows the finger.
+    var rstage = $('ringStage');
+    function ringDrag(e) {
+      var r = rstage.getBoundingClientRect();
+      var dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+      setRing(2 * Math.sqrt(dx * dx + dy * dy) / state.pxPerMm);
+    }
+    rstage.addEventListener('pointerdown', function (e) { rstage.setPointerCapture(e.pointerId); ringDrag(e); });
+    rstage.addEventListener('pointermove', function (e) { if (rstage.hasPointerCapture(e.pointerId)) ringDrag(e); });
 
     // Dragging on the strip moves the marker.
     var strip = $('stripStage');
@@ -279,6 +324,7 @@
     window.addEventListener('resize', function () {
       checkZoom();
       if (!$('measure').hidden && state.method === 'finger') renderStrip();
+      if (!$('calib').hidden) renderCalib();
     });
   }
 
