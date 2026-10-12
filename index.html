@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>True Ring Size: measure a ring on your screen</title>
+<meta name="description" content="Find your ring size in US, UK, EU and Japan sizes. Calibrate your screen with a bank card or coin, then match a ring you own or enter a finger measurement. Works offline, no account.">
+<meta name="theme-color" content="#14213d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <h1>True Ring Size</h1>
+  <button id="recal" class="link" type="button" hidden>Recalibrate</button>
+</header>
+
+<div id="zoomWarn" class="warn" role="alert" hidden>
+  The page is zoomed. Zoom back to 100% or sizes on screen will be wrong.
+</div>
+
+<main>
+  <!-- Step 1: calibration -->
+  <section id="calib" class="card">
+    <p class="step">Step 1 of 2</p>
+    <h2>Set your screen's true size</h2>
+    <p>Screens differ, so this takes ten seconds and makes the result accurate. Pick something you have to hand.</p>
+
+    <div class="seg" role="tablist" aria-label="Calibration object">
+      <button type="button" role="tab" id="tabCard" aria-selected="true">Bank card</button>
+      <button type="button" role="tab" id="tabCoin" aria-selected="false">Coin</button>
+    </div>
+
+    <div id="coinPick" hidden>
+      <label for="coin">Which coin?</label>
+      <select id="coin"></select>
+    </div>
+
+    <p id="calibHelp" class="help"></p>
+
+    <div class="stage" id="calibStage">
+      <div id="calibBar" class="bar" aria-hidden="true"></div>
+      <div id="calibDisc" class="disc" aria-hidden="true" hidden></div>
+    </div>
+
+    <div class="adjust">
+      <button type="button" class="nudge" id="calMinus" aria-label="Smaller">−</button>
+      <input type="range" id="calRange" min="2.5" max="14" step="0.005" aria-label="Adjust size">
+      <button type="button" class="nudge" id="calPlus" aria-label="Larger">+</button>
+    </div>
+
+    <button type="button" class="primary" id="calDone">It matches</button>
+  </section>
+
+  <!-- Step 2: measure -->
+  <section id="measure" hidden>
+    <div class="seg" role="tablist" aria-label="Measuring method">
+      <button type="button" role="tab" id="tabRing" aria-selected="true">I have a ring that fits</button>
+      <button type="button" role="tab" id="tabFinger" aria-selected="false">Measure my finger</button>
+    </div>
+
+    <div id="ringMode" class="card">
+      <p class="help">Lay the ring flat on the circle. Adjust until the dark circle just fills the <strong>inside</strong> of the ring, with no dark edge hidden under the metal.</p>
+      <div class="stage tall" id="ringStage">
+        <div id="ringDisc" class="disc" aria-hidden="true"></div>
+        <div class="cross" aria-hidden="true"></div>
+      </div>
+      <div class="adjust">
+        <button type="button" class="nudge" id="ringMinus" aria-label="Smaller">−</button>
+        <input type="range" id="ringRange" min="12" max="25" step="0.05" aria-label="Circle diameter">
+        <button type="button" class="nudge" id="ringPlus" aria-label="Larger">+</button>
+      </div>
+    </div>
+
+    <div id="fingerMode" class="card" hidden>
+      <ol class="steps">
+        <li>Wrap a thin strip of paper around the base of the finger. Snug, but it should still slide over the knuckle.</li>
+        <li>Mark where the strip overlaps, then lay it flat on the line below with one end at the left edge.</li>
+        <li>Drag the marker to your mark, or type the length if you used a ruler.</li>
+      </ol>
+      <div class="stage strip" id="stripStage">
+        <div id="stripLine" class="stripline" aria-hidden="true"></div>
+        <div id="stripMark" class="stripmark" aria-hidden="true"></div>
+      </div>
+      <p id="stripTooLong" class="help" hidden>If your strip is longer than the screen, turn the phone sideways or type the length instead.</p>
+      <div class="adjust">
+        <button type="button" class="nudge" id="circMinus" aria-label="Shorter">−</button>
+        <input type="range" id="circRange" min="38" max="78" step="0.1" aria-label="Finger circumference">
+        <button type="button" class="nudge" id="circPlus" aria-label="Longer">+</button>
+      </div>
+      <label class="inline" for="circInput">Length in mm
+        <input type="number" id="circInput" inputmode="decimal" min="38" max="78" step="0.1">
+      </label>
+    </div>
+
+    <section class="card result" aria-live="polite">
+      <div class="primarySize">
+        <label for="system" class="sr">Size system</label>
+        <select id="system">
+          <option value="us">US / Canada</option>
+          <option value="uk">UK / Australia</option>
+          <option value="eu">Europe (ISO)</option>
+          <option value="jp">Japan</option>
+        </select>
+        <output id="bigSize">–</output>
+      </div>
+      <dl class="others">
+        <div><dt>US</dt><dd id="oUs">–</dd></div>
+        <div><dt>UK</dt><dd id="oUk">–</dd></div>
+        <div><dt>EU</dt><dd id="oEu">–</dd></div>
+        <div><dt>JP</dt><dd id="oJp">–</dd></div>
+      </dl>
+      <p class="dims"><span id="oMm">–</span> mm inside diameter · <span id="oCirc">–</span> mm around</p>
+      <button type="button" class="secondary" id="share">Copy result</button>
+      <p id="between" class="help" hidden></p>
+    </section>
+
+    <details class="card">
+      <summary>Getting it right</summary>
+      <ul>
+        <li>Measure at the end of the day, when fingers are warm. Cold fingers are smaller.</li>
+        <li>If the knuckle is much wider than the base, measure both and choose a size between them.</li>
+        <li>Wide bands (6 mm and over) fit tighter: go up half a US size.</li>
+        <li>Measuring twice and getting the same answer is the best check there is.</li>
+        <li>A paper strip stretches and slips. A ring that already fits is the more reliable method.</li>
+      </ul>
+    </details>
+
+    <details class="card">
+      <summary>Size chart</summary>
+      <div class="tablewrap">
+        <table id="chart">
+          <thead><tr><th>mm</th><th>US</th><th>UK</th><th>EU</th><th>JP</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary>Check the calibration</summary>
+      <p class="help">This line should be exactly 50 mm (5 cm) long against a ruler.</p>
+      <div id="checkLine" class="checkline" aria-hidden="true"></div>
+    </details>
+  </section>
+</main>
+
+<footer>
+  <p>Works offline. Nothing you measure leaves this device.</p>
+</footer>
+
+<script src="sizes.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
