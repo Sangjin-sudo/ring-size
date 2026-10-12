@@ -164,3 +164,7 @@ footer { color: var(--ink-soft); font-size: 0.85rem; text-align: center; padding
     border-left: 0; border-right: 0; border-radius: 0;
   }
 }
+
+footer a, main a, a.link { color: inherit; }
+.card h2 + p, .card h2 + ul { margin-top: 0; }
+.card p + h2, .card ul + h2 { margin-top: 18px; }

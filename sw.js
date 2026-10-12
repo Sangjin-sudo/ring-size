@@ -1,9 +1,9 @@
 // Offline cache. When any file changes, bump V here AND the ?v= numbers in
 // index.html, so a phone can never mix an old script with a new page.
-var V = '5';
+var V = '6';
 var CACHE = 'ringsizer-v' + V;
 var FILES = ['./', 'index.html', 'style.css?v=' + V, 'sizes.js?v=' + V, 'app.js?v=' + V,
-  'icon.svg', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
+  'privacy.html', 'icon.svg', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) {
