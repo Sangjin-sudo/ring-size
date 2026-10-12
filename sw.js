@@ -1,6 +1,6 @@
 // Offline cache. When any file changes, bump V here AND the ?v= numbers in
 // index.html, so a phone can never mix an old script with a new page.
-var V = '4';
+var V = '5';
 var CACHE = 'ringsizer-v' + V;
 var FILES = ['./', 'index.html', 'style.css?v=' + V, 'sizes.js?v=' + V, 'app.js?v=' + V,
   'icon.svg', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
@@ -18,16 +18,25 @@ self.addEventListener('activate', function (e) {
   }).then(function () { return self.clients.claim(); }));
 });
 
-// Network first (revalidated, never a stale HTTP-cache copy), cache as the offline fallback.
+// Network first, but only wait 2.5 s for it. On a weak mobile signal a request
+// can hang instead of failing, so after the wait the saved copy is used.
+var WAIT_MS = 2500;
+
+function fromCache(req) {
+  return caches.match(req).then(function (hit) { return hit || caches.match('index.html'); });
+}
+
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
-  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(function (res) {
+  var network = fetch(e.request, { cache: 'no-cache' }).then(function (res) {
     if (res.ok) {
       var copy = res.clone();
       caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
     }
     return res;
-  }).catch(function () {
-    return caches.match(e.request).then(function (hit) { return hit || caches.match('index.html'); });
-  }));
+  });
+  var slow = new Promise(function (resolve) {
+    setTimeout(function () { fromCache(e.request).then(function (hit) { if (hit) resolve(hit); }); }, WAIT_MS);
+  });
+  e.respondWith(Promise.race([network, slow]).catch(function () { return fromCache(e.request); }));
 });
